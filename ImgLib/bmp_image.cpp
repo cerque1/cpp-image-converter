@@ -36,7 +36,9 @@ PACKED_STRUCT_END
 
 // функция вычисления отступа по ширине
 static int GetBMPStride(int w) {
-    return 4 * ((w * 3 + 3) / 4);
+    unsigned short color_count = 3;
+    unsigned short alignment = 4;
+    return alignment * ((w * color_count + 3) / alignment);
 }
 
 template <typename Arg0, typename... Args>
@@ -96,6 +98,10 @@ bool SaveBMP(const Path& file, const Image& image) {
         }
     }
 
+    if (out.fail()) {
+        return false;
+    }
+
     return true;
 }
 
@@ -104,11 +110,20 @@ Image LoadBMP(const Path& file) {
     ifstream in(file, ios::in | ios::binary);
 
     //Bitmap File Header read
+    std::string valid_signature = "BM";
     vector<char> format(2);
     unsigned size_header, ident;
     int reserved;
 
     in.read(format.data(), 2);
+
+    if (in.fail()) {
+        return {};
+    }
+
+    if (!equal(format.begin(), format.end(), valid_signature.begin(), valid_signature.end())) {
+        return {};
+    }
 
     //Bitmap Info Header read
     unsigned short count_planes, count_bit, count_bits;
@@ -118,6 +133,9 @@ Image LoadBMP(const Path& file) {
     ReadArgsFromFile(in, &size_header, &reserved, &ident, &size_info, &w, &h, &count_planes, &count_bits, &compression, &count_byte_in_data, &horizontal_resolution, 
         &vertical_resolution, &count_used_colors, &number_of_significant_colors);
 
+    if (in.fail()) {
+        return {};
+    }
     //body read
     Image image(w, h, Color::Black());
     vector<char> buffer(GetBMPStride(w));
