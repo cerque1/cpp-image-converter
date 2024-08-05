@@ -118,11 +118,10 @@ Image LoadBMP(const Path& file) {
     in.read(format.data(), 2);
 
     if (in.fail()) {
-        return {};
+        return;
     }
-
     if (!equal(format.begin(), format.end(), valid_signature.begin(), valid_signature.end())) {
-        return {};
+        return;
     }
 
     //Bitmap Info Header read
@@ -134,7 +133,7 @@ Image LoadBMP(const Path& file) {
         &vertical_resolution, &count_used_colors, &number_of_significant_colors);
 
     if (in.fail()) {
-        return {};
+        return;
     }
     //body read
     Image image(w, h, Color::Black());
@@ -149,6 +148,10 @@ Image LoadBMP(const Path& file) {
             line[x].g = static_cast<byte>(buffer[x * 3 + 1]);
             line[x].r = static_cast<byte>(buffer[x * 3 + 2]);
         }
+    }
+
+    if (in.fail()) {
+        return;
     }
 
     return image;
